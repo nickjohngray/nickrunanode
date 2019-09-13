@@ -18,7 +18,7 @@ import { MainContent, MainLayout } from 'components/layout';
 import { Button, PageHeading, Ellipsis } from 'components';
 import withContainer from './container';
 import ClipboardShareLinks from '../wallet/account/transferSectionPage/ClipboardShareLinks';
-import UnStakeWarningModal from './UnStakeWarningModal';
+import UnStakeWarningModal from 'components/UnStakeWarningModal';
 import TheWallet from '../../api/wallets/TheWallet';
 import TheWalletAccount from '../../api/wallets/TheWalletAccount';
 import useApis from '../stakingOverviewPage/useApis';
