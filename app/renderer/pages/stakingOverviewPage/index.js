@@ -11,6 +11,10 @@ import ValidatorsList from './ValidatorsList';
 import WaitingList from './WaitingList';
 import useApis from './useApis';
 import useApi from './useApi';
+import TheWallet from '../../api/wallets/TheWallet';
+import R from 'ramda';
+import TheWalletAccount from '../../api/wallets/TheWalletAccount';
+import UnStakeWarningModal from 'components/UnStakeWarningModal';
 
 const PageTitleWrapper = styled.div`
   display: flex;
@@ -36,6 +40,11 @@ const ListsWrapper = styled.div`
   margin: 2rem 0;
   display: flex;
   justify-content: space-between;
+`;
+
+const UnStakeButton = styled(Button)`
+  position: absolute;
+  right: 0rem;
 `;
 
 const reoderList = (arryList, fromIndex, toIndex = 0) => {
@@ -69,9 +78,14 @@ const sortedListWithBalances = (accountList, premierAccount, setValueFn) => {
 
 const StakingOverviewPage = ({
   subNav,
-  onClickStakeButton,
+
+  onStake,
   stakingStashAccountAddress,
   wsLocalStatus,
+  onUnStake,
+  stakingStashWalletId,
+  wallets,
+  onSyncWalletData,
 }) => {
   const [eraProgress, eraLength, sessionProgress, sessionLength, validators, intentions] = useApis(
     'getEraProgress',
@@ -90,6 +104,16 @@ const StakingOverviewPage = ({
 
   const [intentionsWithBalances, setIntentionsWithBalances] = useState([]);
   const [validatorsWithBalances, setValidatorsWithBalances] = useState([]);
+
+  const [isUnStakeWarningModalOpen, setUnStakeWarningModalOpen] = useState(false);
+
+  const stakingWallet: TheWallet = wallets && R.find(R.propEq('id', stakingStashWalletId))(wallets);
+  const stakingAccount: TheWalletAccount = stakingWallet.accounts[stakingStashAccountAddress];
+
+  // sync wallet data
+  useEffect(() => {
+    onSyncWalletData({ id: stakingStashWalletId, stakingWallet });
+  }, []);
 
   useEffect(() => {
     const sortedIntentions =
@@ -116,13 +140,15 @@ const StakingOverviewPage = ({
                 <NextUpHintText>You may join validator list at next era</NextUpHintText>
               )}
             </TextTitleWrapper>
-            <Button
-              style={{ display: stakingStashAccountAddress ? 'none' : 'block' }}
-              size="lg"
-              onClick={() => onClickStakeButton()}
-            >
-              Stake
-            </Button>
+            {!stakingStashAccountAddress ? (
+              <Button size="lg" onClick={onStake}>
+                Stake
+              </Button>
+            ) : (
+              <UnStakeButton variant="danger" onClick={() => setUnStakeWarningModalOpen(true)}>
+                Unstake
+              </UnStakeButton>
+            )}
           </PageTitleWrapper>
         </PageHeading>
         <StakingProgressCard
@@ -142,6 +168,15 @@ const StakingOverviewPage = ({
           />
         </ListsWrapper>
       </MainContent>
+      <UnStakeWarningModal
+        {...{
+          isUnStakeWarningModalOpen,
+          setUnStakeWarningModalOpen,
+          onUnStake,
+          stakingWallet,
+          stakingAccount,
+        }}
+      />
     </MainLayout>
   );
 };
